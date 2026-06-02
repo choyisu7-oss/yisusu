@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오피스텔 투자 수익률 계산기 — 요안나 부동산</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --surface2: #f0ede6;
+    --border: #e2ddd5;
+    --text: #1a1a18;
+    --muted: #7a7872;
+    --accent: #1a3a2a;
+    --accent-light: #e8f0eb;
+    --danger: #8b2020;
+    --danger-light: #fdf0f0;
+    --warn: #7a4f00;
+    --warn-light: #fef8ec;
+    --safe: #1a4a2a;
+    --safe-light: #edf6f0;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Noto Sans KR', sans-serif;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: 2rem 1.5rem 1.5rem;
+    text-align: center;
+  }
+
+  header .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.6);
+    margin-bottom: 10px;
+  }
+
+  header h1 {
+    font-size: clamp(20px, 5vw, 28px);
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+
+  header p {
+    font-size: 13px;
+    color: rgba(255,255,255,.65);
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+
+  .slider-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .slider-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+
+  .slider-label {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .slider-val {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 99px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    transition: transform .15s;
+  }
+
+  input[type=range]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .metric {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+
+  .metric-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: .04em;
+    margin-bottom: 6px;
+  }
+
+  .metric-val {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .metric-val.danger { color: var(--danger); }
+  .metric-val.safe   { color: var(--safe); }
+  .metric-val.warn   { color: var(--warn); }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1rem 0;
+  }
+
+  .breakdown {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 2.1;
+    font-family: var(--mono);
+  }
+
+  .breakdown strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .alert {
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .alert-label {
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: .04em;
+    margin-bottom: 4px;
+  }
+
+  .alert.safe   { background: var(--safe-light);   color: var(--safe); }
+  .alert.warn   { background: var(--warn-light);   color: var(--warn); }
+  .alert.danger { background: var(--danger-light); color: var(--danger); }
+
+  .tier-section { margin-top: 0; }
+
+  .tier {
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    border-left: 3px solid transparent;
+  }
+
+  .tier-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .tier-rate {
+    font-family: var(--mono);
+    font-size: 17px;
+    font-weight: 500;
+  }
+
+  .tier-tag {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .06em;
+    padding: 2px 8px;
+    border-radius: 99px;
+  }
+
+  .tier-desc {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .tier.danger {
+    background: var(--danger-light);
+    border-color: #c84040;
+    color: var(--danger);
+  }
+  .tier.danger .tier-tag { background: #f7c1c1; color: var(--danger); }
+
+  .tier.safe {
+    background: var(--safe-light);
+    border-color: #3a8a5a;
+    color: var(--safe);
+  }
+  .tier.safe .tier-tag { background: #b8dfc8; color: var(--safe); }
+
+  .tier.info {
+    background: #eef3fa;
+    border-color: #5a8ac8;
+    color: #1a3a6a;
+  }
+  .tier.info .tier-tag { background: #c0d4f0; color: #1a3a6a; }
+
+  .vacancy-grid {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin: 10px 0 6px;
+  }
+
+  .month-pill {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .month-pill.income  { background: var(--safe-light);   color: var(--safe); }
+  .month-pill.vacant  { background: var(--danger-light); color: var(--danger); }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .legend span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .dot {
+    width: 9px; height: 9px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  footer {
+    text-align: center;
+    padding: 1.5rem 1rem 2rem;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    line-height: 1.8;
+  }
+
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  @media (max-width: 400px) {
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .metrics .metric:last-child { grid-column: span 2; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">요안나 부동산 · 투자 도구</div>
+  <h1>오피스텔 수익률 계산기</h1>
+  <p>매매가, 대출, 금리, 월세를 조정하면<br>실투자금 기준 수익률을 바로 확인할 수 있습니다.</p>
+</header>
+
+<div class="container">
+
+  <!-- 입력 슬라이더 -->
+  <div class="card">
+    <div class="card-title">투자 조건 입력</div>
+
+    <div class="slider-group">
+      <div class="slider-row">
+        <span class="slider-label">매매가</span>
+        <span class="slider-val" id="v-price">2억</span>
+      </div>
+      <input type="range" id="price" min="0.5" max="10" step="0.5" value="2" oninput="calc()">
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-row">
+        <span class="slider-label">대출 비율</span>
+        <span class="slider-val" id="v-loan">50%</span>
+      </div>
+      <input type="range" id="loan" min="0" max="70" step="10" value="50" oninput="calc()">
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-row">
+        <span class="slider-label">대출 금리</span>
+        <span class="slider-val" id="v-rate">4.5%</span>
+      </div>
+      <input type="range" id="rate" min="2" max="9" step="0.1" value="4.5" oninput="calc()">
+    </div>
+
+    <div class="slider-group" style="margin-bottom:0">
+      <div class="slider-row">
+        <span class="slider-label">월세</span>
+        <span class="slider-val" id="v-rent">70만원</span>
+      </div>
+      <input type="range" id="rent" min="20" max="300" step="5" value="70" oninput="calc()">
+    </div>
+  </div>
+
+  <!-- 결과 지표 -->
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">월 이자</div>
+      <div class="metric-val danger" id="m-interest">—</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">월 실수령</div>
+      <div class="metric-val" id="m-net">—</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">실투자금 수익률</div>
+      <div class="metric-val" id="m-yield">—</div>
+    </div>
+  </div>
+
+  <!-- 계산 내역 -->
+  <div class="card">
+    <div class="card-title">계산 내역</div>
+    <div class="breakdown" id="breakdown"></div>
+    <hr class="divider">
+    <div class="alert" id="alert">
+      <div class="alert-label" id="alert-label"></div>
+      <div id="alert-text"></div>
+    </div>
+  </div>
+
+  <!-- 공실 리스크 -->
+  <div class="card">
+    <div class="card-title">공실 리스크 — 보수적 계산 기준</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:8px;">
+      오피스텔은 1~2인 가구 특성상 이사가 잦습니다. 연간 <strong style="color:var(--text)">1.5개월 공실</strong>을 반영한 수익률이 현실적입니다.
+    </div>
+    <div class="vacancy-grid" id="vacancy-grid"></div>
+    <div class="legend">
+      <span><span class="dot" style="background:#3a8a5a"></span>수입 발생</span>
+      <span><span class="dot" style="background:#c84040"></span>공실 (1.5개월)</span>
+    </div>
+  </div>
+
+  <!-- 입지별 수익률 가이드 -->
+  <div class="card tier-section">
+    <div class="card-title">입지별 수익률 해석</div>
+
+    <div class="tier danger">
+      <div class="tier-header">
+        <span class="tier-rate">5% 이상</span>
+        <span class="tier-tag">주의 필요</span>
+      </div>
+      <div class="tier-desc">고수익 = 고위험 신호. 공실 위험 지역이거나 매매가가 낮은 이유를 먼저 확인해야 합니다.</div>
+    </div>
+
+    <div class="tier safe">
+      <div class="tier-header">
+        <span class="tier-rate">3 ~ 4%대</span>
+        <span class="tier-tag">현실적 목표</span>
+      </div>
+      <div class="tier-desc">역세권·직주근접 수요가 안정적인 지역. 현장에서 가장 많이 권장하는 구간입니다.</div>
+    </div>
+
+    <div class="tier info">
+      <div class="tier-header">
+        <span class="tier-rate">2%대</span>
+        <span class="tier-tag">차익형 투자</span>
+      </div>
+      <div class="tier-desc">강남권 등 매매가가 높은 지역. 시세차익을 기대하는 장기 투자 방식입니다.</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  현장을 직접 다니며 솔직한 부동산 정보를 전달하는<br>
+  <a href="#">요안나 부동산 블로그</a> · 상담 문의는 블로그 DM으로<br><br>
+  이 계산기는 참고용이며 실제 수익률은 세금·관리비 등에 따라 달라집니다.
+</footer>
+
+<script>
+function calc() {
+  const price  = parseFloat(document.getElementById('price').value);
+  const loanPct = parseFloat(document.getElementById('loan').value);
+  const rate   = parseFloat(document.getElementById('rate').value);
+  const rent   = parseFloat(document.getElementById('rent').value);
+
+  document.getElementById('v-price').textContent = price + '억';
+  document.getElementById('v-loan').textContent  = loanPct + '%';
+  document.getElementById('v-rate').textContent  = rate.toFixed(1) + '%';
+  document.getElementById('v-rent').textContent  = rent + '만원';
+
+  const loanAmt = price * loanPct / 100;
+  const ownAmt  = price - loanAmt;
+  const monthlyInterest = (loanAmt * 1e8 * rate / 100) / 12 / 1e4;
+  const netMonthly = rent - monthlyInterest;
+  const annualNet  = netMonthly * 10.5;
+  const realYield  = ownAmt > 0 ? (annualNet / (ownAmt * 1e8 / 1e4)) * 100 : 0;
+
+  document.getElementById('m-interest').textContent = monthlyInterest.toFixed(1) + '만';
+  
+  const netEl = document.getElementById('m-net');
+  netEl.textContent = netMonthly.toFixed(1) + '만';
+  netEl.className = 'metric-val ' + (netMonthly >= 0 ? 'safe' : 'danger');
+
+  const yEl = document.getElementById('m-yield');
+  yEl.textContent = realYield.toFixed(2) + '%';
+  yEl.className = 'metric-val ' + (realYield >= 3 ? 'safe' : realYield >= 1.5 ? 'warn' : 'danger');
+
+  document.getElementById('breakdown').innerHTML =
+    `매매가 <strong>${price}억</strong> &nbsp;|&nbsp; 대출 <strong>${loanAmt.toFixed(1)}억 (${loanPct}%)</strong> &nbsp;|&nbsp; 실투자금 <strong>${ownAmt.toFixed(1)}억</strong><br>` +
+    `월세 <strong>${rent}만</strong> − 이자 <strong>${monthlyInterest.toFixed(1)}만</strong> = 실수령 <strong>${netMonthly.toFixed(1)}만</strong><br>` +
+    `연 실수령 (공실 1.5개월 반영) &nbsp;<strong>${annualNet.toFixed(0)}만원</strong><br>` +
+    `실투자금 대비 수익률 &nbsp;<strong>${realYield.toFixed(2)}%</strong>`;
+
+  const al = document.getElementById('alert');
+  const alLabel = document.getElementById('alert-label');
+  const alText  = document.getElementById('alert-text');
+
+  if (netMonthly < 0) {
+    al.className = 'alert danger';
+    alLabel.textContent = '역전 위험';
+    alText.textContent  = '현재 금리에서 이자가 월세를 초과합니다. 대출 비율을 낮추거나 더 높은 월세 지역을 검토해보세요.';
+  } else if (realYield < 2) {
+    al.className = 'alert warn';
+    alLabel.textContent = '수익률 점검 필요';
+    alText.textContent  = '실투자금 대비 수익률이 2% 미만입니다. 시세차익이 없다면 예금과 큰 차이가 없을 수 있습니다.';
+  } else if (realYield < 3) {
+    al.className = 'alert warn';
+    alLabel.textContent = '보통 수준';
+    alText.textContent  = '금리가 오를 경우를 대비해 +1~2% 시나리오도 함께 확인해두는 것을 권장합니다.';
+  } else {
+    al.className = 'alert safe';
+    alLabel.textContent = '현실적인 수익 구간';
+    alText.textContent  = '안정적인 수익률 구간입니다. 공실 최소화를 위한 입지 확인도 함께 진행하세요.';
+  }
+
+  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','공실'];
+  const grid = document.getElementById('vacancy-grid');
+  grid.innerHTML = months.map((m, i) =>
+    `<div class="month-pill ${i < 11 ? 'income' : 'vacant'}">${m}</div>`
+  ).join('');
+}
+
+calc();
+</script>
+</body>
+</html>
